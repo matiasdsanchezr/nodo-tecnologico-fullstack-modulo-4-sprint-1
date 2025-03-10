@@ -12,31 +12,34 @@ export const Home = () => {
   const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
-    const savedCountries = JSON.parse(localStorage.getItem("countries"));
-
-    // Verificar si savedCountries es un array
-    if (Array.isArray(savedCountries)) {
-      setCountries(savedCountries);
-    } else {
-      setCountries([]);
+    try {
+      const savedCountries = JSON.parse(localStorage.getItem("countries"));
+      if (Array.isArray(savedCountries)) {
+        setCountries(savedCountries);
+      } else {
+        setCountries([]);
+      }
+    } catch (error) {
+      console.error("Error al cargar los países desde localStorage:", error);
+      setCountries([]); // En caso de error, establecer un array vacío
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("countries", JSON.stringify(countries));
+  }, [countries]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (inputValue < 1) {
-      alert("El nombre del nuevo país debe contener al menos un carácter.");
+    const countryName = inputValue.trim();
+    if (!countryName) {
+      alert("El nombre del país no puede estar vacío.");
       return;
     }
 
-    const newCountry = { key: generateUniqueKey(), name: inputValue };
-    setCountries((prevCountries) => {
-      const updatedCountries = [...prevCountries, newCountry];
-      localStorage.setItem("countries", JSON.stringify(updatedCountries));
-      return updatedCountries;
-    });
-
+    const newCountry = { key: generateUniqueKey(), name: countryName };
+    setCountries((prevCountries) => [...prevCountries, newCountry]);
     setInputValue("");
   };
 
@@ -45,29 +48,25 @@ export const Home = () => {
   };
 
   const handleDelete = (key) => {
-    const updatedCountries = countries.filter((country) => country.key !== key);
-    setCountries(() => {
-      localStorage.setItem("countries", JSON.stringify(updatedCountries));
-      return updatedCountries;
-    });
+    setCountries((prevCountries) =>
+      prevCountries.filter((country) => country.key !== key)
+    );
   };
 
   return (
     <>
-      {/* Mensaje de bienvenida */}
       <section className="container mx-auto text-center p-3 sm:p-6">
         <h1 className="h1 font-light sm:p-6 text-center">BIENVENIDO</h1>
         <p>Aquí podrás registrar y eliminar países de manera sencilla y eficiente.</p>
-        <motion.div
+        <motion.img
+          src={flagsImage}
+          className="w-full max-w-md mx-auto z-50"
           variants={slideInFromSide(1.5)}
           initial="initial"
           animate={["animate"]}
-        >
-          <img src={flagsImage} alt="" className="w-full max-w-md mx-auto" />
-        </motion.div>
+        />
       </section>
 
-      {/* Lista de países */}
       <section className="container mx-auto p-3 sm:p-6">
         <h2 className="h2 font-light p-3 text-center">LISTA DE PAÍSES</h2>
         <ul className="flex flex-col max-w-md w-full mx-auto">
@@ -89,7 +88,6 @@ export const Home = () => {
         </ul>
       </section>
 
-      {/* Formulario para agregar nuevo país */}
       <section className="container mx-auto p-3 text-center sm:p-6">
         <div className="mx-auto p-3 rounded-md max-w-2xl border border-white">
           <h2 className="h2 font-light text-center p-3">AGREGAR NUEVO PAÍS</h2>
